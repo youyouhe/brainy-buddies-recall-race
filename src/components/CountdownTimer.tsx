@@ -1,5 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import SoundEffects from '@/utils/SoundEffects';
 
 interface CountdownTimerProps {
   duration: number;
@@ -7,46 +8,51 @@ interface CountdownTimerProps {
   onComplete: () => void;
 }
 
-const CountdownTimer: React.FC<CountdownTimerProps> = ({
-  duration,
-  isActive,
-  onComplete,
+const CountdownTimer: React.FC<CountdownTimerProps> = ({ 
+  duration, 
+  isActive, 
+  onComplete 
 }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
-
+  
   useEffect(() => {
-    if (isActive) {
-      setTimeLeft(duration);
-      
-      const timer = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(timer);
-            onComplete();
-            return 0;
-          }
-          return prevTime - 1;
+    setTimeLeft(duration);
+  }, [duration]);
+  
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isActive && timeLeft > 0) {
+      SoundEffects.play('tick');
+      timer = setTimeout(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev - 1;
+          return newTime;
         });
       }, 1000);
-      
-      return () => clearInterval(timer);
+    } else if (isActive && timeLeft === 0) {
+      onComplete();
     }
-  }, [isActive, duration, onComplete]);
-
-  const percentageLeft = (timeLeft / duration) * 100;
-
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isActive, timeLeft, onComplete]);
+  
+  const progress = ((duration - timeLeft) / duration) * 100;
+  
   return (
     <div className="w-full max-w-md mx-auto my-8">
-      {isActive && (
-        <div className="text-center mb-2">
-          <span className="countdown-timer text-game-orange">{Math.ceil(timeLeft)}</span>
+      <div className="flex flex-col items-center">
+        <div className="text-4xl font-bold text-game-orange mb-4">
+          {timeLeft}
         </div>
-      )}
-      <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
-        <div 
-          className="bg-game-orange h-full transition-all duration-1000 rounded-full"
-          style={{ width: `${percentageLeft}%` }}
-        ></div>
+        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-game-orange transition-all duration-1000 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
     </div>
   );

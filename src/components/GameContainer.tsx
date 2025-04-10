@@ -8,6 +8,8 @@ import InputField from './InputField';
 import FeedbackDisplay from './FeedbackDisplay';
 import ScoreBoard from './ScoreBoard';
 import Settings from './Settings';
+import SoundToggle from './SoundToggle';
+import SoundEffects from '@/utils/SoundEffects';
 import { cn } from '@/lib/utils';
 
 // Game phases
@@ -66,6 +68,7 @@ const GameContainer: React.FC = () => {
   }, [difficulty, useUppercase, useLowercase, useNumbers, excludeSimilarChars]);
   
   const startGame = () => {
+    SoundEffects.play('start');
     const sequence = generateSequence();
     setCurrentSequence(sequence);
     setCurrentPhase(GamePhase.Display);
@@ -73,6 +76,7 @@ const GameContainer: React.FC = () => {
   };
   
   const handleDisplayEnd = () => {
+    SoundEffects.play('memorize');
     setCurrentPhase(GamePhase.Delay);
   };
   
@@ -86,7 +90,10 @@ const GameContainer: React.FC = () => {
     setTotalAttempts(prev => prev + 1);
     
     if (isAnswerCorrect) {
+      SoundEffects.play('correct');
       setCorrectCount(prev => prev + 1);
+    } else {
+      SoundEffects.play('wrong');
     }
     
     setCurrentPhase(GamePhase.Feedback);
@@ -100,6 +107,11 @@ const GameContainer: React.FC = () => {
     setShowSettings(prev => !prev);
   };
   
+  // Initialize sound effects
+  useEffect(() => {
+    SoundEffects.init();
+  }, []);
+  
   return (
     <div className="game-container">
       <div className="relative">
@@ -109,6 +121,11 @@ const GameContainer: React.FC = () => {
             Brainy Buddies
           </h1>
           <p className="text-xl md:text-2xl text-gray-600">Memory Challenge</p>
+          
+          {/* Sound Toggle */}
+          <div className="mt-2 flex justify-center">
+            <SoundToggle />
+          </div>
         </div>
         
         {/* Score Board */}
